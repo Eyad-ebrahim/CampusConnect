@@ -109,3 +109,104 @@
     color:#777;
 
 }
+
+.create-post-card{
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:15px;
+
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+
+    margin-bottom:30px;
+
+}
+
+.create-post-card h2{
+
+    color:#2563eb;
+
+    margin-bottom:15px;
+
+}
+
+.create-post-card input,
+.create-post-card textarea{
+
+    width:100%;
+
+    padding:12px;
+
+    margin-bottom:15px;
+
+    border:1px solid #ddd;
+
+    border-radius:8px;
+
+    font-size:15px;
+
+    font-family:inherit;
+
+}
+
+.create-post-card textarea{
+
+    resize:vertical;
+
+}
+
+.create-post-card button{
+
+    background:#2563eb;
+
+    color:white;
+
+    border:none;
+
+    padding:12px 25px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+}
+
+.create-post-card button:hover{
+
+    background:#1d4ed8;
+
+}
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+.post-author {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.post-author strong {
+    color: #2563eb;
+}
