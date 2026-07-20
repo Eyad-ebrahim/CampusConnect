@@ -1,6 +1,6 @@
 import "./CommunityPage.css";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 import usersData from "../../data/users";
@@ -89,11 +89,10 @@ function CommunityPage() {
 
       {posts.length > 0 ? (
         posts.map((post) => {
-           
           const author = usersData.find(
             (user) => user.id === post.userId
           );
- 
+
           return (
             <div
               key={post.id}
@@ -109,6 +108,13 @@ function CommunityPage() {
 
               <div className="post-footer">
                 <span>👍 {post.likes} Likes</span>
+
+                <Link
+                  to={`/post/${post.id}`}
+                  className="view-discussion-btn"
+                >
+                  View Discussion
+                </Link>
 
                 {currentUser &&
                   post.userId === currentUser.id && (
