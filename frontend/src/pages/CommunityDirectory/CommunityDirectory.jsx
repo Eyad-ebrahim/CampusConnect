@@ -1,11 +1,15 @@
 import "./CommunityDirectory.css";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import communities from "../../data/communities";
 
 function CommunityDirectory() {
   const [search, setSearch] = useState("");
-  const [joinedCommunities, setJoinedCommunities] = useState([]);
+const { currentUser, toggleCommunity } = useAuth();
+
+const joinedCommunities =
+  currentUser?.joinedCommunities || [];
   const [communityList, setCommunityList] = useState(communities);
 
   const filteredCommunities = communityList.filter((community) =>
@@ -13,31 +17,25 @@ function CommunityDirectory() {
   );
 
   function toggleJoin(id) {
-    const joined = joinedCommunities.includes(id);
+  const joined = joinedCommunities.includes(id);
 
-    if (joined) {
-      setJoinedCommunities(
-        joinedCommunities.filter((communityId) => communityId !== id)
-      );
-    } else {
-      setJoinedCommunities([...joinedCommunities, id]);
-    }
+  toggleCommunity(id);
 
-    setCommunityList(
-      communityList.map((community) => {
-        if (community.id === id) {
-          return {
-            ...community,
-            members: joined
-              ? community.members - 1
-              : community.members + 1,
-          };
-        }
+  setCommunityList(
+    communityList.map((community) => {
+      if (community.id === id) {
+        return {
+          ...community,
+          members: joined
+            ? community.members - 1
+            : community.members + 1,
+        };
+      }
 
-        return community;
-      })
-    );
-  }
+      return community;
+    })
+  );
+}
 
   return (
     <div className="community-directory">

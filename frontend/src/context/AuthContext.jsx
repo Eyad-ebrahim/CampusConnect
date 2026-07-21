@@ -5,7 +5,13 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
 
-    const [users, setUsers] = useState(usersData);
+    const [users, setUsers] = useState(() => {
+        const savedUsers = localStorage.getItem("users");
+
+        return savedUsers
+            ? JSON.parse(savedUsers)
+            : usersData;
+    });
 
     const [currentUser, setCurrentUser] = useState(null);
 
@@ -18,6 +24,15 @@ export function AuthProvider({ children }) {
         }
 
     }, []);
+
+    useEffect(() => {
+
+        localStorage.setItem(
+            "users",
+            JSON.stringify(users)
+        );
+
+    }, [users]);
 
     function login(email, password) {
 
@@ -80,6 +95,41 @@ export function AuthProvider({ children }) {
         return true;
     }
 
+    function toggleCommunity(communityId) {
+
+        if (!currentUser) return;
+
+        const joined =
+            currentUser.joinedCommunities.includes(communityId);
+
+        const updatedUser = {
+            ...currentUser,
+            joinedCommunities: joined
+                ? currentUser.joinedCommunities.filter(
+                      (id) => id !== communityId
+                  )
+                : [
+                      ...currentUser.joinedCommunities,
+                      communityId,
+                  ],
+        };
+
+        const updatedUsers = users.map((user) =>
+            user.id === updatedUser.id
+                ? updatedUser
+                : user
+        );
+
+        setUsers(updatedUsers);
+
+        setCurrentUser(updatedUser);
+
+        localStorage.setItem(
+            "currentUser",
+            JSON.stringify(updatedUser)
+        );
+    }
+
     return (
 
         <AuthContext.Provider
@@ -89,6 +139,7 @@ export function AuthProvider({ children }) {
                 login,
                 logout,
                 register,
+                toggleCommunity,
             }}
         >
 
