@@ -2,7 +2,9 @@ import "./CommunityDirectory.css";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import communities from "../../data/communities";
+import { useCommunities } from "../../context/CommunityContext";
+
+
 
 function CommunityDirectory() {
   const [search, setSearch] = useState("");
@@ -10,31 +12,18 @@ const { currentUser, toggleCommunity } = useAuth();
 
 const joinedCommunities =
   currentUser?.joinedCommunities || [];
-  const [communityList, setCommunityList] = useState(communities);
-
+const { communities: communityList, updateMembers } = useCommunities();
   const filteredCommunities = communityList.filter((community) =>
     community.name.toLowerCase().includes(search.toLowerCase())
   );
 
   function toggleJoin(id) {
-  const joined = joinedCommunities.includes(id);
 
-  toggleCommunity(id);
+    const joined = joinedCommunities.includes(id);
 
-  setCommunityList(
-    communityList.map((community) => {
-      if (community.id === id) {
-        return {
-          ...community,
-          members: joined
-            ? community.members - 1
-            : community.members + 1,
-        };
-      }
+    toggleCommunity(id);
 
-      return community;
-    })
-  );
+    updateMembers(id, !joined);
 }
 
   return (

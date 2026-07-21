@@ -4,22 +4,25 @@ import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 import usersData from "../../data/users";
-import communities from "../../data/communities";
-import postsData from "../../data/posts";
+import { useCommunities } from "../../context/CommunityContext";
+import { usePosts } from "../../context/PostContext";
 
 function CommunityPage() {
   const { id } = useParams();
-  const { currentUser } = useAuth();
+  const { currentUser, users } = useAuth();
 
-  const community = communities.find(
+const { communities } = useCommunities();
+
+const community = communities.find(
     (community) => community.id === Number(id)
-  );
+);
 
-  const [posts, setPosts] = useState(
-    postsData.filter(
-      (post) => post.communityId === Number(id)
-    )
-  );
+const { posts, addPost, deletePost } = usePosts();
+
+const communityPosts = posts.filter(
+    (post) => post.communityId === Number(id)
+);
+  
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -36,15 +39,15 @@ function CommunityPage() {
       likes: 0,
     };
 
-    setPosts([newPost, ...posts]);
+addPost(newPost);
 
     setTitle("");
     setContent("");
   }
 
   function handleDeletePost(postId) {
-    setPosts(posts.filter((post) => post.id !== postId));
-  }
+    deletePost(postId);
+}
 
   if (!community) {
     return <h2>Community not found.</h2>;
@@ -87,9 +90,9 @@ function CommunityPage() {
 
       <h2 className="posts-title">Posts</h2>
 
-      {posts.length > 0 ? (
-        posts.map((post) => {
-          const author = usersData.find(
+      {communityPosts.length > 0 ? (
+  communityPosts.map((post) => {
+          const author = users.find(
             (user) => user.id === post.userId
           );
 

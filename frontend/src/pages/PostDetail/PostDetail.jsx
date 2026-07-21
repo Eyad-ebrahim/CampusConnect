@@ -3,15 +3,22 @@ import "./PostDetail.css";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 
-import posts from "../../data/posts";
-import commentsData from "../../data/comments";
-import users from "../../data/users";
-import communities from "../../data/communities";
 import { useAuth } from "../../context/AuthContext";
+import { usePosts } from "../../context/PostContext";
+import { useComments } from "../../context/CommentContext";
+import { useCommunities } from "../../context/CommunityContext";
 
 function PostDetail() {
   const { id } = useParams();
-  const { currentUser } = useAuth();
+
+  const { currentUser, users } = useAuth();
+  const { posts } = usePosts();
+  const { communities } = useCommunities();
+  const {
+    comments,
+    addComment,
+    deleteComment,
+  } = useComments();
 
   const post = posts.find(
     (post) => post.id === Number(id)
@@ -29,10 +36,8 @@ function PostDetail() {
     (community) => community.id === post.communityId
   );
 
-  const [comments, setComments] = useState(
-    commentsData.filter(
-      (comment) => comment.postId === post.id
-    )
+  const postComments = comments.filter(
+    (comment) => comment.postId === post.id
   );
 
   const [newComment, setNewComment] = useState("");
@@ -47,16 +52,13 @@ function PostDetail() {
       content: newComment,
     };
 
-    setComments([...comments, comment]);
+    addComment(comment);
+
     setNewComment("");
   }
 
   function handleDeleteComment(commentId) {
-    setComments(
-      comments.filter(
-        (comment) => comment.id !== commentId
-      )
-    );
+    deleteComment(commentId);
   }
 
   return (
@@ -84,8 +86,8 @@ function PostDetail() {
       <div className="comments-section">
         <h2>Comments</h2>
 
-        {comments.length > 0 ? (
-          comments.map((comment) => {
+        {postComments.length > 0 ? (
+          postComments.map((comment) => {
             const commentAuthor = users.find(
               (user) => user.id === comment.userId
             );
