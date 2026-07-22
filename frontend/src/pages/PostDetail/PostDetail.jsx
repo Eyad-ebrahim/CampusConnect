@@ -1,12 +1,13 @@
 import "./PostDetail.css";
 
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useAuth } from "../../context/AuthContext";
 import { usePosts } from "../../context/PostContext";
 import { useComments } from "../../context/CommentContext";
 import { useCommunities } from "../../context/CommunityContext";
+import { useInteractions } from "../../context/InteractionContext";
 
 function PostDetail() {
   const { id } = useParams();
@@ -20,6 +21,8 @@ function PostDetail() {
     deleteComment,
   } = useComments();
 
+  const { addInteraction } = useInteractions();
+
   const post = posts.find(
     (post) => post.id === Number(id)
   );
@@ -27,6 +30,18 @@ function PostDetail() {
   if (!post) {
     return <h2>Post not found.</h2>;
   }
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    addInteraction({
+      userId: currentUser.id,
+      postId: post.id,
+      communityId: post.communityId,
+      type: "view",
+    });
+
+  }, [post.id, currentUser]);
 
   const author = users.find(
     (user) => user.id === post.userId
@@ -53,6 +68,13 @@ function PostDetail() {
     };
 
     addComment(comment);
+
+    addInteraction({
+      userId: currentUser.id,
+      postId: post.id,
+      communityId: post.communityId,
+      type: "comment",
+    });
 
     setNewComment("");
   }

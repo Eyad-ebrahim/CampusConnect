@@ -5,13 +5,16 @@ import { CommunityProvider } from "./context/CommunityContext";
 import { PostProvider } from "./context/PostContext";
 import { AuthProvider } from "./context/AuthContext";
 import { CommentProvider } from "./context/CommentContext";
+import { InteractionProvider } from "./context/InteractionContext";
 
 createRoot(document.getElementById("root")).render(
 <AuthProvider>
     <CommunityProvider>
         <PostProvider>
             <CommentProvider>
-                <App />
+                <InteractionProvider>
+                    <App />
+                </InteractionProvider>
             </CommentProvider>
         </PostProvider>
     </CommunityProvider>

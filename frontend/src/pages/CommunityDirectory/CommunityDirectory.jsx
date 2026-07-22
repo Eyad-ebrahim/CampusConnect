@@ -3,12 +3,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCommunities } from "../../context/CommunityContext";
-
+import { useInteractions } from "../../context/InteractionContext";
 
 
 function CommunityDirectory() {
   const [search, setSearch] = useState("");
 const { currentUser, toggleCommunity } = useAuth();
+const { addInteraction } = useInteractions();
 
 const joinedCommunities =
   currentUser?.joinedCommunities || [];
@@ -17,13 +18,22 @@ const { communities: communityList, updateMembers } = useCommunities();
     community.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  function toggleJoin(id) {
+ function toggleJoin(id) {
 
     const joined = joinedCommunities.includes(id);
 
     toggleCommunity(id);
 
     updateMembers(id, !joined);
+
+    if (!joined) {
+        addInteraction({
+            userId: currentUser.id,
+            communityId: id,
+            type: "join",
+        });
+    }
+
 }
 
   return (
