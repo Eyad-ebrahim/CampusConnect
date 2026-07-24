@@ -1,5 +1,10 @@
 const bcrypt = require("bcrypt");
-const { createUser } = require("../models/userModel");
+const jwt = require("jsonwebtoken");
+
+const {
+    createUser,
+    findUserByEmail
+} = require("../models/userModel");
 
 const register = async (req, res) => {
     try {
@@ -34,5 +39,66 @@ const register = async (req, res) => {
 
     }
 };
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-module.exports = { register };
+        // Check if user exists
+        const user = await findUserByEmail(email);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password"
+            });
+        }
+
+        // Compare password
+        const passwordMatch = await bcrypt.compare(
+            password,
+            user.password_hash
+        );
+
+        if (!passwordMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password"
+            });
+        }
+
+        // Generate JWT
+        const token = jwt.sign(
+            {
+                user_id: user.user_id,
+                email: user.email
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "24h"
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successful",
+            token,
+            user: {
+                user_id: user.user_id,
+                username: user.username,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+module.exports = {
+    register,
+    login
+};
