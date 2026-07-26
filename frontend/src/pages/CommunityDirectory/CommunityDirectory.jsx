@@ -1,40 +1,70 @@
 import "./CommunityDirectory.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { useCommunities } from "../../context/CommunityContext";
-import { useInteractions } from "../../context/InteractionContext";
-
+import api from "../../services/api";
 
 function CommunityDirectory() {
+  const [communities, setCommunities] = useState([]);
+  const [joinedCommunities, setJoinedCommunities] = useState([]);
   const [search, setSearch] = useState("");
-const { currentUser, toggleCommunity } = useAuth();
-const { addInteraction } = useInteractions();
+  const [loading, setLoading] = useState(true);
 
-const joinedCommunities =
-  currentUser?.joinedCommunities || [];
-const { communities: communityList, updateMembers } = useCommunities();
-  const filteredCommunities = communityList.filter((community) =>
-    community.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    loadData();
+  }, []);
 
- function toggleJoin(id) {
+  async function loadData() {
+    setLoading(true);
 
-    const joined = joinedCommunities.includes(id);
+    try {
+      const [communitiesRes, profileRes] = await Promise.all([
+        api.get("/communities"),
+        api.get("/users/me"),
+      ]);
 
-    toggleCommunity(id);
+      setCommunities(communitiesRes.data.communities);
 
-    updateMembers(id, !joined);
-
-    if (!joined) {
-        addInteraction({
-            userId: currentUser.id,
-            communityId: id,
-            type: "join",
-        });
+      setJoinedCommunities(
+        profileRes.data.profile.communities.map(
+          (community) => community.community_id
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
+  }
 
-}
+  async function joinCommunity(id) {
+    try {
+      await api.post(`/communities/${id}/join`);
+      await loadData();
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+          "Unable to join community."
+      );
+    }
+  }
+
+  async function leaveCommunity(id) {
+    try {
+      await api.delete(`/communities/${id}/join`);
+      await loadData();
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+          "Unable to leave community."
+      );
+    }
+  }
+
+  const filtered = communities.filter((community) =>
+    community.name
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
     <div className="community-directory">
@@ -48,53 +78,61 @@ const { communities: communityList, updateMembers } = useCommunities();
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <div className="community-grid">
-        {filteredCommunities.length > 0 ? (
-          filteredCommunities.map((community) => (
-            <div key={community.id} className="community-card">
-              <h2>{community.name}</h2>
+      {loading ? (
+        <h2>Loading...</h2>
+      ) : (
+        <div className="community-grid">
+          {filtered.map((community) => {
+            const isJoined = joinedCommunities.includes(
+              community.community_id
+            );
 
-              <p>{community.description}</p>
+            return (
+              <div
+                key={community.community_id}
+                className="community-card"
+              >
+                <h2>{community.name}</h2>
 
-              <div className="community-info">
-                <span>
-                  👥 {community.members}{" "}
-                  {community.members === 1 ? "member" : "members"}
-                </span>
+                <p>{community.description}</p>
 
-                <span>{community.category}</span>
+                <div className="card-buttons">
+                  <Link
+                    to={`/community/${community.community_id}`}
+                    className="view-btn"
+                  >
+                    View Community
+                  </Link>
+
+                  {isJoined ? (
+                    <button
+                      className="join-btn"
+                      onClick={() =>
+                        leaveCommunity(
+                          community.community_id
+                        )
+                      }
+                    >
+                      Leave
+                    </button>
+                  ) : (
+                    <button
+                      className="join-btn"
+                      onClick={() =>
+                        joinCommunity(
+                          community.community_id
+                        )
+                      }
+                    >
+                      Join
+                    </button>
+                  )}
+                </div>
               </div>
-
-              <div className="card-buttons">
-                <Link
-                  to={`/community/${community.id}`}
-                  className="view-btn"
-                >
-                  View Community
-                </Link>
-
-                <button
-                  className={
-                    joinedCommunities.includes(community.id)
-                      ? "leave-btn"
-                      : "join-btn"
-                  }
-                  onClick={() => toggleJoin(community.id)}
-                >
-                  {joinedCommunities.includes(community.id)
-                    ? "Leave"
-                    : "Join"}
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-results">
-            <h2>No communities found 😕</h2>
-            <p>Try searching for something else.</p>
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

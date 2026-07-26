@@ -1,17 +1,29 @@
 import "./Profile.css";
-
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
 import { useAuth } from "../../context/AuthContext";
-import { useCommunities } from "../../context/CommunityContext";
-import { usePosts } from "../../context/PostContext";
-import { useComments } from "../../context/CommentContext";
+import api from "../../services/api";
 
 function Profile() {
   const { currentUser } = useAuth();
-  const { communities } = useCommunities();
-  const { posts } = usePosts();
-  const { comments } = useComments();
+
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  async function loadProfile() {
+    try {
+      const res = await api.get("/users/me");
+      setProfile(res.data.profile);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (!currentUser) {
     return (
@@ -21,44 +33,48 @@ function Profile() {
     );
   }
 
-  const joinedCommunities = communities.filter((community) =>
-    currentUser.joinedCommunities.includes(community.id)
-  );
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
 
-  const userPosts = posts.filter(
-    (post) => post.userId === currentUser.id
-  );
-
-  const userComments = comments.filter(
-    (comment) => comment.userId === currentUser.id
-  );
+  if (!profile) {
+    return (
+      <div className="profile-page">
+        <h2>Unable to load profile.</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-page">
       <div className="profile-card">
 
         <div className="profile-avatar">
-          {currentUser.name.charAt(0).toUpperCase()}
+          {profile.user.username.charAt(0).toUpperCase()}
         </div>
 
-        <h1>{currentUser.name}</h1>
+        <h1>{profile.user.username}</h1>
 
-        <p>{currentUser.email}</p>
+        <p>{profile.user.email}</p>
 
         <div className="profile-stats">
 
           <div className="stat">
-            <h2>{joinedCommunities.length}</h2>
+            <h2>{profile.communities.length}</h2>
             <p>Communities</p>
           </div>
 
           <div className="stat">
-            <h2>{userPosts.length}</h2>
+            <h2>{profile.posts.length}</h2>
             <p>Posts</p>
           </div>
 
           <div className="stat">
-            <h2>{userComments.length}</h2>
+            <h2>{profile.comments.length}</h2>
             <p>Comments</p>
           </div>
 
@@ -67,11 +83,11 @@ function Profile() {
         <div className="joined-section">
           <h3>Joined Communities</h3>
 
-          {joinedCommunities.length > 0 ? (
+          {profile.communities.length > 0 ? (
             <ul>
-              {joinedCommunities.map((community) => (
-                <li key={community.id}>
-                  <Link to={`/community/${community.id}`}>
+              {profile.communities.map((community) => (
+                <li key={community.community_id}>
+                  <Link to={`/community/${community.community_id}`}>
                     {community.name}
                   </Link>
                 </li>
@@ -85,11 +101,11 @@ function Profile() {
         <div className="joined-section">
           <h3>My Posts</h3>
 
-          {userPosts.length > 0 ? (
+          {profile.posts.length > 0 ? (
             <ul>
-              {userPosts.map((post) => (
-                <li key={post.id}>
-                  <Link to={`/post/${post.id}`}>
+              {profile.posts.map((post) => (
+                <li key={post.post_id}>
+                  <Link to={`/post/${post.post_id}`}>
                     {post.title}
                   </Link>
                 </li>
@@ -103,12 +119,12 @@ function Profile() {
         <div className="joined-section">
           <h3>My Comments</h3>
 
-          {userComments.length > 0 ? (
+          {profile.comments.length > 0 ? (
             <ul>
-              {userComments.map((comment) => (
-                <li key={comment.id}>
-                  <Link to={`/post/${comment.postId}`}>
-                    {comment.content}
+              {profile.comments.map((comment) => (
+                <li key={comment.comment_id}>
+                  <Link to={`/post/${comment.post_id}`}>
+                    {comment.body}
                   </Link>
                 </li>
               ))}

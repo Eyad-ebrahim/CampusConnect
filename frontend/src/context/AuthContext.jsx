@@ -1,157 +1,87 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import usersData from "../data/users";
+import { createContext, useContext, useEffect, useState } from "react";
+import { loginUser, registerUser } from "../services/authService";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-
-    const [users, setUsers] = useState(() => {
-        const savedUsers = localStorage.getItem("users");
-
-        return savedUsers
-            ? JSON.parse(savedUsers)
-            : usersData;
-    });
-
     const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        const user = localStorage.getItem("currentUser");
 
-        const savedUser = localStorage.getItem("currentUser");
-
-        if (savedUser) {
-            setCurrentUser(JSON.parse(savedUser));
+        if (token && user) {
+            setCurrentUser(JSON.parse(user));
         }
 
+        setLoading(false);
     }, []);
 
-    useEffect(() => {
+    const login = async (email, password) => {
+        try {
+            const data = await loginUser(email, password);
 
-        localStorage.setItem(
-            "users",
-            JSON.stringify(users)
-        );
+            localStorage.setItem("token", data.token);
+            localStorage.setItem(
+                "currentUser",
+                JSON.stringify(data.user)
+            );
 
-    }, [users]);
+            setCurrentUser(data.user);
 
-    function login(email, password) {
-
-        const user = users.find(
-            (user) =>
-                user.email === email &&
-                user.password === password
-        );
-
-        if (!user) {
-            return false;
+            return {
+                success: true,
+                message: data.message,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Login failed.",
+            };
         }
+    };
 
-        setCurrentUser(user);
+    const register = async (username, email, password) => {
+        try {
+            await registerUser(username, email, password);
 
-        localStorage.setItem(
-            "currentUser",
-            JSON.stringify(user)
-        );
+            // Automatically log in after successful registration
+            return await login(email, password);
+        } catch (error) {
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Registration failed.",
+            };
+        }
+    };
 
-        return true;
-    }
-
-    function logout() {
-
-        setCurrentUser(null);
-
+    const logout = () => {
+        localStorage.removeItem("token");
         localStorage.removeItem("currentUser");
-    }
-
-    function register(name, email, password) {
-
-        const emailExists = users.some(
-            (user) => user.email === email
-        );
-
-        if (emailExists) {
-            return false;
-        }
-
-        const newUser = {
-            id: users.length + 1,
-            name,
-            email,
-            password,
-            joinedCommunities: [],
-        };
-
-        const updatedUsers = [...users, newUser];
-
-        setUsers(updatedUsers);
-
-        setCurrentUser(newUser);
-
-        localStorage.setItem(
-            "currentUser",
-            JSON.stringify(newUser)
-        );
-
-        return true;
-    }
-
-    function toggleCommunity(communityId) {
-
-        if (!currentUser) return;
-
-        const joined =
-            currentUser.joinedCommunities.includes(communityId);
-
-        const updatedUser = {
-            ...currentUser,
-            joinedCommunities: joined
-                ? currentUser.joinedCommunities.filter(
-                      (id) => id !== communityId
-                  )
-                : [
-                      ...currentUser.joinedCommunities,
-                      communityId,
-                  ],
-        };
-
-        const updatedUsers = users.map((user) =>
-            user.id === updatedUser.id
-                ? updatedUser
-                : user
-        );
-
-        setUsers(updatedUsers);
-
-        setCurrentUser(updatedUser);
-
-        localStorage.setItem(
-            "currentUser",
-            JSON.stringify(updatedUser)
-        );
-    }
+        setCurrentUser(null);
+    };
 
     return (
-
         <AuthContext.Provider
             value={{
-                users,
                 currentUser,
                 login,
-                logout,
                 register,
-                toggleCommunity,
+                logout,
+                loading,
+                isAuthenticated: !!currentUser,
             }}
         >
-
-            {children}
-
+            {!loading && children}
         </AuthContext.Provider>
-
     );
 }
 
 export function useAuth() {
-
     return useContext(AuthContext);
-
 }

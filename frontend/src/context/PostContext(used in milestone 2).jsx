@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import postsData from "../data/posts";
+import postsData from "../Mock data(used in milestone 2)/posts";
 
 const PostContext = createContext();
 

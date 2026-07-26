@@ -19,15 +19,20 @@ function Register() {
 
     const [error, setError] = useState("");
 
-    function handleSubmit(e) {
+    const [loading, setLoading] = useState(false);
+
+    async function handleSubmit(e) {
 
         e.preventDefault();
+
+        setError("");
 
         if (!name || !email || !password || !confirmPassword) {
 
             setError("Please fill in all fields.");
 
             return;
+
         }
 
         if (password !== confirmPassword) {
@@ -35,18 +40,29 @@ function Register() {
             setError("Passwords do not match.");
 
             return;
+
         }
 
-        const success = register(name, email, password);
+        setLoading(true);
 
-        if (!success) {
+        const result = await register(
+            name,
+            email,
+            password
+        );
 
-            setError("Email already exists.");
+        setLoading(false);
+
+        if (!result.success) {
+
+            setError(result.message);
 
             return;
+
         }
 
         navigate("/");
+
     }
 
     return (
@@ -74,7 +90,7 @@ function Register() {
                     type="text"
                     placeholder="Full Name"
                     value={name}
-                    onChange={(e)=>setName(e.target.value)}
+                    onChange={(e) => setName(e.target.value)}
                 />
 
                 <label>Email</label>
@@ -83,7 +99,7 @@ function Register() {
                     type="email"
                     placeholder="Email"
                     value={email}
-                    onChange={(e)=>setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                 />
 
                 <label>Password</label>
@@ -92,7 +108,7 @@ function Register() {
                     type="password"
                     placeholder="Password"
                     value={password}
-                    onChange={(e)=>setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)}
                 />
 
                 <label>Confirm Password</label>
@@ -101,11 +117,14 @@ function Register() {
                     type="password"
                     placeholder="Confirm Password"
                     value={confirmPassword}
-                    onChange={(e)=>setConfirmPassword(e.target.value)}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                 />
 
-                <button type="submit">
-                    Register
+                <button
+                    type="submit"
+                    disabled={loading}
+                >
+                    {loading ? "Creating Account..." : "Register"}
                 </button>
 
                 <span>

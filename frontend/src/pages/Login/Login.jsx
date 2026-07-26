@@ -15,27 +15,38 @@ function Login() {
 
     const [error, setError] = useState("");
 
-    function handleSubmit(e) {
+    const [loading, setLoading] = useState(false);
+
+    async function handleSubmit(e) {
 
         e.preventDefault();
+
+        setError("");
 
         if (!email || !password) {
 
             setError("Please fill in all fields.");
 
             return;
+
         }
 
-        const success = login(email, password);
+        setLoading(true);
 
-        if (!success) {
+        const result = await login(email, password);
 
-            setError("Invalid email or password.");
+        setLoading(false);
+
+        if (!result.success) {
+
+            setError(result.message);
 
             return;
+
         }
 
         navigate("/");
+
     }
 
     return (
@@ -65,7 +76,7 @@ function Login() {
                     type="email"
                     placeholder="Enter your email"
                     value={email}
-                    onChange={(e)=>setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                 />
 
                 <label>Password</label>
@@ -74,11 +85,14 @@ function Login() {
                     type="password"
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e)=>setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)}
                 />
 
-                <button type="submit">
-                    Login
+                <button
+                    type="submit"
+                    disabled={loading}
+                >
+                    {loading ? "Logging in..." : "Login"}
                 </button>
 
                 <span>
