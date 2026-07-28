@@ -39,7 +39,7 @@ router.post(
 
 // Leave
 router.delete(
-    "/:communityId/leave",
+    "/:communityId/join",
     authenticateToken,
     leaveCommunityController
 );

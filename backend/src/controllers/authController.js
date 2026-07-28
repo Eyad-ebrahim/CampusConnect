@@ -8,11 +8,23 @@ const {
 
 const register = async (req, res) => {
     try {
+
         const { username, email, password } = req.body;
 
         if (!username || !email || !password) {
             return res.status(400).json({
+                success: false,
                 message: "All fields are required."
+            });
+        }
+
+        // Check if email already exists
+        const existingUser = await findUserByEmail(email);
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already exists."
             });
         }
 
@@ -24,7 +36,8 @@ const register = async (req, res) => {
             hashedPassword
         );
 
-        res.status(201).json({
+        return res.status(201).json({
+            success: true,
             message: "User created successfully.",
             user
         });
@@ -33,17 +46,19 @@ const register = async (req, res) => {
 
         console.error(error);
 
-        res.status(500).json({
+        return res.status(500).json({
+            success: false,
             message: "Server Error"
         });
 
     }
 };
+
 const login = async (req, res) => {
     try {
+
         const { email, password } = req.body;
 
-        // Check if user exists
         const user = await findUserByEmail(email);
 
         if (!user) {
@@ -53,7 +68,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Compare password
         const passwordMatch = await bcrypt.compare(
             password,
             user.password_hash
@@ -66,7 +80,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Generate JWT
         const token = jwt.sign(
             {
                 user_id: user.user_id,
@@ -90,14 +103,17 @@ const login = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         return res.status(500).json({
             success: false,
             message: "Server error"
         });
+
     }
 };
+
 module.exports = {
     register,
     login
