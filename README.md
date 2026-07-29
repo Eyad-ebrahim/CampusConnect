@@ -276,6 +276,126 @@ Abdelrahman Ahmed: Backend Endpoints: posts comments, profile and recommendation
 
 
 
+# 🚀 Installation & Setup Guide
+
+## 1. Clone the Repo
+
+```bash
+git clone https://github.com/YOUR_USERNAME/CampusConnect.git
+cd CampusConnect
+```
+
+---
+
+## 2. Install Dependencies
+
+### Backend
+
+```bash
+cd backend
+npm install
+```
+
+### Frontend
+
+Open a new terminal:
+
+```bash
+cd frontend
+npm install
+```
+
+---
+
+## 3. Create the Database
+
+1. Open **pgAdmin**.
+2. Create a new database named:
+
+```
+CampusConnect
+```
+
+3. Open the Query Tool.
+4. Run the provided **Database Schema SQL**.
+5. Run the **Seed Data SQL**.
+
+This will create all tables and populate them with sample data.
+
+---
+
+## 4. Configure Environment Variables
+
+Inside the **backend** folder, create a file named:
+
+```
+.env
+```
+
+Add the following:
+
+```env
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/CampusConnect
+JWT_SECRET=CampusConnectSuperSecretKey123
+PORT=5000
+```
+
+Replace `YOUR_PASSWORD` with your PostgreSQL password.
+
+If PostgreSQL is running on another port (e.g. 5433), update the connection string accordingly.
+
+Example:
+
+```env
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5433/CampusConnect
+```
+
+---
+
+## 5. Start the Backend
+
+```bash
+cd backend
+npm run dev
+```
+
+If everything is configured correctly, you should see:
+
+```
+🚀 Server is running on port 5000
+✅ Connected to PostgreSQL
+```
+
+---
+
+## 6. Start the Frontend
+
+Open another terminal.
+
+```bash
+cd frontend
+npm run dev
+```
+
+You should see something similar to:
+
+```
+VITE ready
+
+Local: http://localhost:5173
+```
+
+---
+
+## 7. Open the Website
+
+Open your browser and visit:
+
+```
+http://localhost:5173
+```
+
+The CampusConnect application should now be running.
 
 
 
