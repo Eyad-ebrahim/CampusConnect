@@ -1,277 +1,249 @@
 -- ==========================================================
--- CampusConnect
--- Database Schema and Seed Data
+-- CampusConnect Database Schema
 -- ==========================================================
 
-DROP SCHEMA IF EXISTS "CampusConnect" CASCADE;
-
-CREATE SCHEMA "CampusConnect";
+DROP TABLE IF EXISTS comments CASCADE;
+DROP TABLE IF EXISTS interactions CASCADE;
+DROP TABLE IF EXISTS memberships CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS communities CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 -- ==========================================================
--- Users
+-- USERS
 -- ==========================================================
 
-CREATE TABLE "CampusConnect"."Users" (
-    "userId" SERIAL PRIMARY KEY,
-    "username" TEXT NOT NULL UNIQUE,
-    "email" TEXT NOT NULL UNIQUE,
-    "passwordHash" TEXT NOT NULL,
-    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==========================================================
--- Communities
+-- COMMUNITIES
 -- ==========================================================
 
-CREATE TABLE "CampusConnect"."Communities" (
-    "communityId" SERIAL PRIMARY KEY,
-    "name" TEXT NOT NULL UNIQUE,
-    "description" TEXT NOT NULL
+CREATE TABLE communities (
+    community_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NOT NULL
 );
 
 -- ==========================================================
--- Memberships
+-- MEMBERSHIPS
 -- ==========================================================
 
-CREATE TABLE "CampusConnect"."Memberships" (
-    "membershipId" SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL,
-    "communityId" INTEGER NOT NULL,
-    "joinedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE memberships (
+    membership_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    community_id INTEGER NOT NULL,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_membership_user
-        FOREIGN KEY ("userId")
-        REFERENCES "CampusConnect"."Users"("userId")
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
         ON DELETE CASCADE,
 
     CONSTRAINT fk_membership_community
-        FOREIGN KEY ("communityId")
-        REFERENCES "CampusConnect"."Communities"("communityId")
+        FOREIGN KEY (community_id)
+        REFERENCES communities(community_id)
         ON DELETE CASCADE,
 
     CONSTRAINT unique_membership
-        UNIQUE ("userId", "communityId")
+        UNIQUE (user_id, community_id)
 );
 
 -- ==========================================================
--- Posts
+-- POSTS
 -- ==========================================================
 
-CREATE TABLE "CampusConnect"."Posts" (
-    "postId" SERIAL PRIMARY KEY,
-    "title" TEXT NOT NULL,
-    "body" TEXT NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "communityId" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE posts (
+    post_id SERIAL PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    body TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    community_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_post_user
-        FOREIGN KEY ("userId")
-        REFERENCES "CampusConnect"."Users"("userId")
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
         ON DELETE CASCADE,
 
     CONSTRAINT fk_post_community
-        FOREIGN KEY ("communityId")
-        REFERENCES "CampusConnect"."Communities"("communityId")
+        FOREIGN KEY (community_id)
+        REFERENCES communities(community_id)
         ON DELETE CASCADE
 );
 
 -- ==========================================================
--- Comments
+-- COMMENTS
 -- ==========================================================
 
-CREATE TABLE "CampusConnect"."Comments" (
-    "commentId" SERIAL PRIMARY KEY,
-    "body" TEXT NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "postId" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE comments (
+    comment_id SERIAL PRIMARY KEY,
+    body TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_comment_user
-        FOREIGN KEY ("userId")
-        REFERENCES "CampusConnect"."Users"("userId")
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
         ON DELETE CASCADE,
 
     CONSTRAINT fk_comment_post
-        FOREIGN KEY ("postId")
-        REFERENCES "CampusConnect"."Posts"("postId")
+        FOREIGN KEY (post_id)
+        REFERENCES posts(post_id)
         ON DELETE CASCADE
 );
 
 -- ==========================================================
--- Interactions
+-- INTERACTIONS
 -- ==========================================================
 
-CREATE TABLE "CampusConnect"."Interactions" (
-    "interactionId" SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL,
-    "targetType" TEXT NOT NULL,
-    "targetId" INTEGER NOT NULL,
-    "interactionType" TEXT NOT NULL,
-    "interactedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE interactions (
+    interaction_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    target_type VARCHAR(20) NOT NULL,
+    target_id INTEGER NOT NULL,
+    interaction_type VARCHAR(30) NOT NULL,
+    interacted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_interaction_user
-        FOREIGN KEY ("userId")
-        REFERENCES "CampusConnect"."Users"("userId")
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
         ON DELETE CASCADE,
 
     CONSTRAINT chk_target_type
-        CHECK ("targetType" IN ('Community', 'Post')),
+        CHECK (target_type IN ('Community', 'Post')),
 
     CONSTRAINT chk_interaction_type
-        CHECK ("interactionType" IN ('Joined', 'Viewed', 'Commented'))
+        CHECK (interaction_type IN ('Joined','Viewed','Commented','Posted'))
 );
 
--- ==========================================================
--- Indexes
--- ==========================================================
 
-CREATE INDEX idx_memberships_user
-ON "CampusConnect"."Memberships"("userId");
 
-CREATE INDEX idx_memberships_community
-ON "CampusConnect"."Memberships"("communityId");
 
-CREATE INDEX idx_posts_user
-ON "CampusConnect"."Posts"("userId");
-
-CREATE INDEX idx_posts_community
-ON "CampusConnect"."Posts"("communityId");
-
-CREATE INDEX idx_comments_post
-ON "CampusConnect"."Comments"("postId");
-
-CREATE INDEX idx_comments_user
-ON "CampusConnect"."Comments"("userId");
-
-CREATE INDEX idx_interactions_user
-ON "CampusConnect"."Interactions"("userId");
 
 -- ==========================================================
 -- Seed Data
 -- ==========================================================
 
--- Users
+-- ==========================
+-- USERS
+-- ==========================
 
-INSERT INTO "CampusConnect"."Users"
-("username","email","passwordHash")
+INSERT INTO users (username, email, password_hash)
 VALUES
-('Ahmed Ali','ahmed@example.com','$2b$10$ExampleHash1'),
-('Sara Mohamed','sara@example.com','$2b$10$ExampleHash2'),
-('Omar Hassan','omar@example.com','$2b$10$ExampleHash3'),
-('Mariam Adel','mariam@example.com','$2b$10$ExampleHash4'),
-('Youssef Khaled','youssef@example.com','$2b$10$ExampleHash5'),
-('Nour Ibrahim','nour@example.com','$2b$10$ExampleHash6');
+('Mohamed','test@test.com','$2b$10$svdv8h9Z3I0SYMKD/1h8isuwQlShGlmR6yvjBBv9h1BwW2PxzZo/3G'),
+('Eslam Kabonga','ahmed@example.com','$2b$10$svdv8h9Z3I0SYMKD/1h8isuwQlShGlmR6yvjBBv9h1BwW2PxzZo/3G'),
+('Sara','sara@example.com','$2b$10$svdv8h9Z3I0SYMKD/1h8isuwQlShGlmR6yvjBBv9h1BwW2PxzZo/3G'),
+('Omar Hassan','omar@example.com','$2b$10$svdv8h9Z3I0SYMKD/1h8isuwQlShGlmR6yvjBBv9h1BwW2PxzZo/3G'),
+('Ali','ali456@test.com','$2b$10$QlWMGhA4IJITIXyDI77ujeSLgJvMF5IRYhP.3ggoeDP0uGFTc8Rje'),
+('Aloosh','Aloosh@test.com','$2b$10$DGnzc/qCx2J.w2FWB.J4JuWh3sIzADIr2yJp4FxDdjm3NuMFBPMS');
 
--- Communities
+-- ==========================
+-- COMMUNITIES
+-- ==========================
 
-INSERT INTO "CampusConnect"."Communities"
-("name","description")
+INSERT INTO communities (name, description)
 VALUES
-('Computer Science Club','A community for students interested in programming, software engineering, and technology.'),
-('Football Club','A community for students who enjoy football and sports activities.'),
-('Robotics Team','A community focused on robotics projects and competitions.'),
-('Photography Club','A place for photography enthusiasts to share their work and organize events.'),
-('Gaming Community','A community for students interested in video games and eSports.'),
-('AI Society','A community dedicated to artificial intelligence and machine learning.');
+('AI Club','Community for AI enthusiasts'),
+('Computer Science Club','Community for Computer Science students.'),
+('Football Club','Community for students who enjoy football.'),
+('Robotics Team','Community for robotics enthusiasts.');
 
--- Memberships
+-- ==========================
+-- MEMBERSHIPS
+-- ==========================
 
-INSERT INTO "CampusConnect"."Memberships"
-("userId","communityId")
+INSERT INTO memberships (user_id, community_id)
 VALUES
-(1,1),
-(1,6),
 (2,2),
-(2,4),
 (3,3),
-(3,1),
 (4,4),
-(5,5),
-(6,6);
+(1,1),
+(1,3);
 
--- Posts
+-- ==========================
+-- POSTS
+-- ==========================
 
-INSERT INTO "CampusConnect"."Posts"
-("title","body","userId","communityId")
+INSERT INTO posts (title, body, user_id, community_id)
 VALUES
-('Welcome to the Club','Welcome everyone to the Computer Science Club!',1,1),
-
-('Programming Contest',
-'The annual programming contest will be held next week.',
-1,1),
-
-('Friday Match',
-'Join us this Friday for our weekly football match.',
+('Welcome Everyone!',
+'Welcome to the Computer Science Club community.',
 2,2),
 
-('New Robotics Workshop',
-'Our robotics workshop starts next Monday.',
+('Football Match',
+'Join us this Friday for a friendly football match.',
 3,3),
 
-('Photography Walk',
-'Let's organize a photography walk around campus this weekend.',
+('Workshop Announcement',
+'Our robotics workshop starts next Monday.',
 4,4),
 
-('Gaming Tournament',
-'Who wants to participate in the FIFA tournament?',
-5,5),
+('Testing API',
+'This post was created from Postman.',
+1,1),
 
-('AI Study Group',
-'We will discuss neural networks this Thursday.',
-6,6),
+('My First Community Post',
+'This is a test post for the recommendation system.',
+1,1),
 
-('Hackathon',
-'Looking for teammates for the university hackathon.',
-3,1),
+('My First Community Post',
+'This is a test post for the recommendation system.',
+1,1),
 
-('Camera Recommendations',
-'Which beginner DSLR camera do you recommend?',
-2,4),
+('My First Community Post',
+'This is a test post for the recommendation system.',
+1,1),
 
-('Machine Learning Resources',
-'Share your favourite ML courses and books.',
-1,6);
+('HI',
+'HI 2',
+6,1),
 
--- Comments
+('hl',
+'hl',
+6,4),
 
-INSERT INTO "CampusConnect"."Comments"
-("body","userId","postId")
+('Hi',
+'hi',
+6,3);
+
+-- ==========================
+-- COMMENTS
+-- ==========================
+
+INSERT INTO comments (body, user_id, post_id)
 VALUES
-('Looking forward to it!',2,1),
+('Looking forward to it!',3,1),
+('Count me in!',4,2),
+('Sounds exciting!',2,3),
+('Nice post!',1,5),
+('This is my interaction test comment.',1,1),
+('Hello from React',1,8),
+('HIIIIIIII',6,5);
 
-('Great idea!',3,1),
+-- ==========================
+-- INTERACTIONS
+-- ==========================
 
-('Count me in!',1,3),
-
-('Excited for this workshop.',4,4),
-
-('I will join.',6,5),
-
-('Sounds fun!',2,6),
-
-('Thank you for sharing.',5,7),
-
-('I am interested.',4,8),
-
-('Canon EOS is a great choice.',1,9),
-
-('Andrew Ng''s course is excellent.',3,10);
-
--- Interactions
-
-INSERT INTO "CampusConnect"."Interactions"
-("userId","targetType","targetId","interactionType")
+INSERT INTO interactions
+(user_id, target_type, target_id, interaction_type)
 VALUES
-(1,'Community',1,'Joined'),
-(1,'Community',6,'Joined'),
 (2,'Community',2,'Joined'),
-(3,'Community',3,'Joined'),
-(4,'Community',4,'Joined'),
-(5,'Community',5,'Joined'),
-(6,'Community',6,'Joined'),
-(2,'Post',1,'Viewed'),
-(3,'Post',1,'Commented'),
-(1,'Post',3,'Viewed'),
-(5,'Post',7,'Viewed'),
-(6,'Post',10,'Commented');
+(3,'Post',1,'Viewed'),
+(4,'Post',3,'Commented'),
+(1,'Community',1,'Joined'),
+(1,'Post',1,'Viewed'),
+(1,'Post',1,'Viewed'),
+(1,'Post',1,'Commented'),
+(1,'Post',8,'Posted'),
+(1,'Community',3,'Joined'),
+(1,'Post',9,'Posted'),
+(6,'Community',1,'Joined'),
+(6,'Community',2,'Joined');
